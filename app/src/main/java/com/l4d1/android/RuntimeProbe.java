@@ -16,19 +16,19 @@ public class RuntimeProbe {
 
         StringBuilder result = new StringBuilder();
 
-        result.append("NATIVE RUNTIME PROBE\\n\\n");
+        result.append("NATIVE RUNTIME PROBE\n\n");
 
-        result.append("Native library directory:\\n")
+        result.append("Native library directory:\n")
               .append(nativeDir.getAbsolutePath())
-              .append("\\n\\n");
+              .append("\n\n");
 
         result.append("Native directory exists: ")
               .append(nativeDir.isDirectory())
-              .append("\\n");
+              .append("\n");
 
         result.append("Runtime directory exists: ")
               .append(runtimeDir.isDirectory())
-              .append("\\n");
+              .append("\n");
 
         result.append("Wine execution: NOT TESTED");
 
