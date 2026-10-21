@@ -2,254 +2,299 @@ package com.l4d1.android;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.opengl.GLSurfaceView;
-import android.graphics.*;
-import android.view.*;
-import android.widget.FrameLayout;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
+import android.database.Cursor;
+import android.provider.DocumentsContract;
+import android.graphics.Color;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
 
 public class MainActivity extends Activity {
 
-    GLSurfaceView glView;
-    WorldRenderer renderer;
+    private static final int PICK_GAME = 1001;
+
+    private TextView gameStatus;
+    private TextView runtimeStatus;
+    private Button launchButton;
+
+    private SharedPreferences prefs;
 
     @Override
-    public void onCreate(Bundle b) {
-        super.onCreate(b);
+    public void onCreate(Bundle state) {
+        super.onCreate(state);
 
-        getWindow().getDecorView().setSystemUiVisibility(
-            5894 | 1024 | 512
+        prefs = getSharedPreferences(
+            "l4d1_launcher", MODE_PRIVATE
         );
 
-        try {
-            String status = NativeEngine.getStatus();
+        buildInterface();
+        restoreGameDirectory();
+    }
 
-            android.util.Log.i(
-                "L4D1_NATIVE",
-                status
+    private TextView createText(
+        String text, int size, int color
+    ) {
+        TextView view = new TextView(this);
+        view.setText(text);
+        view.setTextSize(size);
+        view.setTextColor(color);
+        view.setPadding(12, 15, 12, 15);
+        return view;
+    }
+
+    private void buildInterface() {
+
+        LinearLayout layout =
+            new LinearLayout(this);
+
+        layout.setOrientation(
+            LinearLayout.VERTICAL
+        );
+
+        layout.setPadding(30, 25, 30, 25);
+        layout.setBackgroundColor(
+            Color.rgb(18, 22, 27)
+        );
+
+        ScrollView scroll = new ScrollView(this);
+        scroll.addView(layout);
+
+        TextView title = createText(
+            "LEFT 4 DEAD 1",
+            30,
+            Color.WHITE
+        );
+
+        title.setGravity(Gravity.CENTER);
+        layout.addView(title);
+
+        TextView version = createText(
+            "ANDROID LAUNCHER v0.4",
+            15,
+            Color.LTGRAY
+        );
+
+        version.setGravity(Gravity.CENTER);
+        layout.addView(version);
+
+        Button selectButton = new Button(this);
+        selectButton.setText("SELECT GAME FOLDER");
+
+        layout.addView(selectButton);
+
+        selectButton.setOnClickListener(v -> {
+            Intent intent = new Intent(
+                Intent.ACTION_OPEN_DOCUMENT_TREE
             );
 
-            android.widget.Toast.makeText(
-                this,
-                status,
-                android.widget.Toast.LENGTH_LONG
-            ).show();
+            intent.addFlags(
+                Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+            );
 
-        } catch (Throwable e) {
+            startActivityForResult(
+                intent, PICK_GAME
+            );
+        });
+
+        gameStatus = createText(
+            "GAME: NOT SELECTED",
+            16,
+            Color.YELLOW
+        );
+
+        layout.addView(gameStatus);
+
+        runtimeStatus = createText(
+            "RUNTIME: NOT INSTALLED",
+            16,
+            Color.RED
+        );
+
+        layout.addView(runtimeStatus);
+
+        launchButton = new Button(this);
+        launchButton.setText("LAUNCH GAME");
+        launchButton.setEnabled(false);
+
+        layout.addView(launchButton);
+
+        TextView information = createText(
+            "Launcher foundation ready.\n" +
+            "Windows compatibility runtime " +
+            "has not been integrated.",
+            14,
+            Color.LTGRAY
+        );
+
+        layout.addView(information);
+
+        setContentView(scroll);
+    }
+
+    private boolean hasChild(
+        Uri treeUri, String name, String mime
+    ) {
+        try {
+            String treeId =
+                DocumentsContract.getTreeDocumentId(
+                    treeUri
+                );
+
+            Uri children =
+                DocumentsContract.buildChildDocumentsUriUsingTree(
+                    treeUri, treeId
+                );
+
+            try (Cursor cursor =
+                getContentResolver().query(
+                    children,
+                    new String[] {
+                        DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                        DocumentsContract.Document.COLUMN_MIME_TYPE
+                    },
+                    null, null, null
+                )) {
+
+                if (cursor == null) return false;
+
+                while (cursor.moveToNext()) {
+
+                    String fileName =
+                        cursor.getString(0);
+
+                    String fileMime =
+                        cursor.getString(1);
+
+                    if (name.equalsIgnoreCase(fileName) &&
+                        (mime == null || mime.equals(fileMime))) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
             android.util.Log.e(
-                "L4D1_NATIVE",
-                "Native engine failed",
+                "L4D1_LAUNCHER",
+                "Folder validation failed",
                 e
             );
         }
 
-        renderer = new WorldRenderer();
-
-        glView = new GLSurfaceView(this);
-        glView.setEGLContextClientVersion(2);
-        glView.setRenderer(renderer);
-
-        // Batasi pembaruan sekitar 30 FPS.
-        glView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-
-        FrameLayout root = new FrameLayout(this);
-        root.addView(glView);
-
-        root.addView(new TouchHUD());
-
-        setContentView(root);
+        return false;
     }
 
-    class TouchHUD extends View {
+    private void validateGame(Uri uri) {
 
-        Paint p = new Paint(3);
+        boolean exe = hasChild(
+            uri, "left4dead.exe", null
+        );
 
-        int joystickId = -1;
-        int cameraId = -1;
+        boolean data = hasChild(
+            uri,
+            "left4dead",
+            DocumentsContract.Document.MIME_TYPE_DIR
+        );
 
-        float joyX, joyY;
-        float knobX, knobY;
-
-        float lastCameraX, lastCameraY;
-
-        long lastRender;
-
-        TouchHUD() {
-            super(MainActivity.this);
+        if (exe && data) {
+            gameStatus.setText(
+                "GAME: BASIC FILE CHECK PASSED"
+            );
+            gameStatus.setTextColor(Color.GREEN);
+        } else {
+            gameStatus.setText(
+                "GAME: INCOMPLETE\n" +
+                "left4dead.exe: " + exe + "\n" +
+                "left4dead folder: " + data
+            );
+            gameStatus.setTextColor(Color.YELLOW);
         }
 
-        void circle(Canvas c, float x, float y,
-                    float radius, int color) {
-            p.setColor(color);
-            c.drawCircle(x, y, radius, p);
-        }
+        launchButton.setEnabled(false);
+    }
 
-        void button(Canvas c, String text,
-                    float x, float y, float radius) {
+    private void restoreGameDirectory() {
 
-            circle(c, x, y, radius, 0x88336699);
+        String saved = prefs.getString(
+            "game_uri", null
+        );
 
-            p.setColor(Color.WHITE);
-            p.setTextAlign(Paint.Align.CENTER);
-            p.setTextSize(17);
-            c.drawText(text, x, y + 6, p);
-        }
+        if (saved != null) {
+            Uri uri = Uri.parse(saved);
 
-        @Override
-        protected void onDraw(Canvas c) {
+            boolean permitted = false;
 
-            float w = getWidth();
-            float h = getHeight();
+            for (android.content.UriPermission permission :
+                getContentResolver()
+                    .getPersistedUriPermissions()) {
 
-            joyX = 120;
-            joyY = h - 120;
-
-            if (joystickId == -1) {
-                knobX = joyX;
-                knobY = joyY;
+                if (permission.getUri().equals(uri) &&
+                    permission.isReadPermission()) {
+                    permitted = true;
+                    break;
+                }
             }
 
-            circle(c, joyX, joyY, 85, 0x553377AA);
-            circle(c, knobX, knobY, 35, 0xAA55AAFF);
-
-            button(c, "FIRE", w - 115, h - 130, 55);
-            button(c, "JUMP", w - 45, h - 245, 38);
-            button(c, "RELOAD", w - 245, h - 55, 42);
-            button(c, "DUCK", w - 45, h - 45, 38);
-            button(c, "USE", w - 245, h - 170, 40);
-
-            p.setColor(Color.WHITE);
-            p.setTextAlign(Paint.Align.CENTER);
-            p.setTextSize(24);
-
-            c.drawText("+", w / 2, h / 2, p);
-
-            p.setTextSize(15);
-            c.drawText("L4D1 ANDROID v0.3 - 3D TEST",
-                       w / 2, 30, p);
-
-            long now = System.nanoTime();
-
-            if (now - lastRender >= 33_333_333L) {
-                glView.requestRender();
-                lastRender = now;
+            if (permitted) {
+                validateGame(uri);
+            } else {
+                gameStatus.setText(
+                    "GAME: FOLDER ACCESS EXPIRED"
+                );
             }
-
-            postInvalidateDelayed(33);
-        }
-
-        void moveJoystick(float x, float y) {
-
-            float dx = x - joyX;
-            float dy = y - joyY;
-
-            float length = (float)Math.hypot(dx, dy);
-
-            if (length > 70) {
-                dx = dx / length * 70;
-                dy = dy / length * 70;
-            }
-
-            knobX = joyX + dx;
-            knobY = joyY + dy;
-
-            renderer.moveX = dx / 70;
-            renderer.moveY = -dy / 70;
-        }
-
-        @Override
-        public boolean onTouchEvent(MotionEvent e) {
-
-            int type = e.getActionMasked();
-            int index = e.getActionIndex();
-
-            if (type == MotionEvent.ACTION_DOWN ||
-                type == MotionEvent.ACTION_POINTER_DOWN) {
-
-                int id = e.getPointerId(index);
-                float x = e.getX(index);
-                float y = e.getY(index);
-
-                if (x < getWidth() * 0.35f &&
-                    y > getHeight() * 0.45f &&
-                    joystickId == -1) {
-
-                    joystickId = id;
-                    moveJoystick(x, y);
-
-                } else if (cameraId == -1) {
-
-                    cameraId = id;
-                    lastCameraX = x;
-                    lastCameraY = y;
-                }
-
-            } else if (type == MotionEvent.ACTION_MOVE) {
-
-                for (int i = 0; i < e.getPointerCount(); i++) {
-
-                    int id = e.getPointerId(i);
-
-                    if (id == joystickId) {
-                        moveJoystick(e.getX(i), e.getY(i));
-                    }
-
-                    if (id == cameraId) {
-
-                        float x = e.getX(i);
-                        float y = e.getY(i);
-
-                        renderer.yaw +=
-                            (x - lastCameraX) * 0.15f;
-
-                        renderer.pitch -=
-                            (y - lastCameraY) * 0.15f;
-
-                        renderer.pitch = Math.max(
-                            -85, Math.min(85, renderer.pitch)
-                        );
-
-                        lastCameraX = x;
-                        lastCameraY = y;
-                    }
-                }
-
-            } else if (type == MotionEvent.ACTION_UP ||
-                       type == MotionEvent.ACTION_POINTER_UP) {
-
-                int id = e.getPointerId(index);
-
-                if (id == joystickId) {
-                    joystickId = -1;
-                    renderer.moveX = 0;
-                    renderer.moveY = 0;
-                }
-
-                if (id == cameraId) {
-                    cameraId = -1;
-                }
-
-            } else if (type == MotionEvent.ACTION_CANCEL) {
-
-                joystickId = -1;
-                cameraId = -1;
-                renderer.moveX = 0;
-                renderer.moveY = 0;
-            }
-
-            invalidate();
-            return true;
         }
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        if (glView != null) glView.onPause();
-    }
+    protected void onActivityResult(
+        int requestCode,
+        int resultCode,
+        Intent data
+    ) {
+        super.onActivityResult(
+            requestCode, resultCode, data
+        );
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (glView != null) glView.onResume();
+        if (requestCode == PICK_GAME &&
+            resultCode == RESULT_OK &&
+            data != null) {
+
+            Uri uri = data.getData();
+
+            if (uri == null) return;
+
+            try {
+                getContentResolver()
+                    .takePersistableUriPermission(
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    );
+
+                prefs.edit()
+                    .putString(
+                        "game_uri",
+                        uri.toString()
+                    )
+                    .apply();
+
+                validateGame(uri);
+
+            } catch (Exception e) {
+                gameStatus.setText(
+                    "GAME: ACCESS ERROR"
+                );
+
+                android.util.Log.e(
+                    "L4D1_LAUNCHER",
+                    "Cannot access game directory",
+                    e
+                );
+            }
+        }
     }
 }
