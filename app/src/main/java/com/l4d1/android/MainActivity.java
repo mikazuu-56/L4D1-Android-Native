@@ -18,6 +18,7 @@ import android.widget.TextView;
 public class MainActivity extends Activity {
 
     private static final int PICK_GAME = 1001;
+    private static final int PICK_INSTALLER = 1002;
 
     private TextView gameStatus;
     private TextView runtimeStatus;
@@ -75,7 +76,7 @@ public class MainActivity extends Activity {
         layout.addView(title);
 
         TextView version = createText(
-            "ANDROID LAUNCHER v0.5",
+            "ANDROID LAUNCHER v0.6",
             15,
             Color.LTGRAY
         );
@@ -83,7 +84,33 @@ public class MainActivity extends Activity {
         version.setGravity(Gravity.CENTER);
         layout.addView(version);
 
-        Button selectButton = new Button(this);
+
+        Button installerButton = new Button(this);
+        installerButton.setText("SELECT WINDOWS INSTALLER");
+
+        layout.addView(installerButton);
+
+        installerButton.setOnClickListener(v -> {
+            Intent intent = new Intent(
+                Intent.ACTION_OPEN_DOCUMENT
+            );
+
+            intent.setType("*/*");
+            intent.addCategory(
+                Intent.CATEGORY_OPENABLE
+            );
+
+            intent.addFlags(
+                Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+            );
+
+            startActivityForResult(
+                intent, PICK_INSTALLER
+            );
+        });
+
+Button selectButton = new Button(this);
         selectButton.setText("SELECT GAME FOLDER");
 
         layout.addView(selectButton);
@@ -311,7 +338,49 @@ public class MainActivity extends Activity {
             requestCode, resultCode, data
         );
 
-        if (requestCode == PICK_GAME &&
+
+        if (requestCode == PICK_INSTALLER &&
+            resultCode == RESULT_OK &&
+            data != null) {
+
+            Uri installerUri = data.getData();
+
+            if (installerUri != null) {
+                try {
+                    getContentResolver()
+                        .takePersistableUriPermission(
+                            installerUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        );
+
+                    prefs.edit()
+                        .putString(
+                            "installer_uri",
+                            installerUri.toString()
+                        )
+                        .apply();
+
+                    new android.app.AlertDialog.Builder(this)
+                        .setTitle("Installer Selected")
+                        .setMessage(
+                            "Installer saved successfully.\n\n" +
+                            "Windows execution runtime is " +
+                            "not installed yet."
+                        )
+                        .setPositiveButton("OK", null)
+                        .show();
+
+                } catch (Exception e) {
+                    new android.app.AlertDialog.Builder(this)
+                        .setTitle("Installer Error")
+                        .setMessage(e.toString())
+                        .setPositiveButton("OK", null)
+                        .show();
+                }
+            }
+        }
+
+if (requestCode == PICK_GAME &&
             resultCode == RESULT_OK &&
             data != null) {
 
