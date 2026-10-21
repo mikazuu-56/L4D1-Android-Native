@@ -186,8 +186,8 @@ Button selectButton = new Button(this);
 
             runtimeStatus.setText(
                 manager.isReady()
-                    ? "RUNTIME: READY"
-                    : "RUNTIME: NOT READY"
+                    ? "STANDALONE FILES: FOUND (UNVERIFIED)"
+                    : "STANDALONE RUNTIME: NOT INSTALLED"
             );
 
             new android.app.AlertDialog.Builder(this)

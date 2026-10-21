@@ -1,8 +1,8 @@
 package com.l4d1.android;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Build;
-
 import java.io.File;
 
 public class RuntimeManager {
@@ -17,61 +17,59 @@ public class RuntimeManager {
         return new File(context.getFilesDir(), "runtime");
     }
 
-    private File runtimeFile(String path) {
-        return new File(runtimeDir(), path);
+    private boolean hasStandaloneRuntime() {
+        File wine = new File(runtimeDir(), "bin/wine");
+        File wowbox = new File(
+            runtimeDir(),
+            "lib/wine/aarch64-windows/wowbox64.dll"
+        );
+
+        return wine.isFile() && wowbox.isFile();
     }
 
-    private boolean exists(String path) {
-        return runtimeFile(path).isFile();
-    }
-
-    public String getStatus() {
-
-        StringBuilder result = new StringBuilder();
-
-        result.append("L4D1 ANDROID RUNTIME v0.7\n\n");
-
-        result.append("Android: ")
-              .append(Build.VERSION.RELEASE)
-              .append("\n");
-
-        result.append("CPU ABI: ")
-              .append(Build.SUPPORTED_ABIS[0])
-              .append("\n\n");
-
-        result.append("Runtime files:\n");
-
-        result.append("Hangover Wine: ")
-              .append(exists("bin/wine") ? "FOUND" : "MISSING")
-              .append("\n");
-
-        result.append("WowBox64: ")
-              .append(exists("lib/wine/aarch64-windows/wowbox64.dll")
-                      ? "FOUND" : "MISSING")
-              .append("\n");
-
-        result.append("WineD3D x86: ")
-              .append(exists("lib/wine/i386-windows/wined3d.dll")
-                      ? "FOUND" : "MISSING")
-              .append("\n");
-
-        result.append("DirectX 9 x86: ")
-              .append(exists("lib/wine/i386-windows/d3d9.dll")
-                      ? "FOUND" : "MISSING")
-              .append("\n\n");
-
-        result.append("Runtime execution: NOT VERIFIED\n");
-
-        result.append("Android integration: NOT COMPLETE\n");
-
-        result.append("\nRuntime directory:\n")
-              .append(runtimeDir().getAbsolutePath());
-
-        return result.toString();
+    private boolean hasTermux() {
+        try {
+            context.getPackageManager().getPackageInfo(
+                "com.termux", 0
+            );
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
     }
 
     public boolean isReady() {
-        // File existence is not proof of executable compatibility.
-        return false;
+        return hasStandaloneRuntime();
+    }
+
+    public String getStatus() {
+        StringBuilder s = new StringBuilder();
+
+        s.append("L4D1 ANDROID RUNTIME v0.9\n\n");
+
+        s.append("Android: ")
+         .append(Build.VERSION.RELEASE)
+         .append("\n");
+
+        s.append("CPU ABI: ")
+         .append(Build.SUPPORTED_ABIS[0])
+         .append("\n\n");
+
+        s.append("Termux installed: ")
+         .append(hasTermux() ? "YES" : "NO")
+         .append("\n");
+
+        s.append("Standalone runtime files: ")
+         .append(hasStandaloneRuntime() ? "FOUND" : "MISSING")
+         .append("\n\n");
+
+        s.append("Runtime execution: NOT VERIFIED\n");
+
+        s.append("Standalone integration: INCOMPLETE\n\n");
+
+        s.append("Runtime directory:\n")
+         .append(runtimeDir().getAbsolutePath());
+
+        return s.toString();
     }
 }

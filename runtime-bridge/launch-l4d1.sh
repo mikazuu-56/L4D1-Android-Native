@@ -33,7 +33,17 @@ LOG="$HOME/l4d1-launch.log"
 
     RESULT=$?
 
+    echo
+    echo "===== EXECUTION RESULT ====="
     echo "Exit code: $RESULT"
+    echo "Finished: $(date)"
+
+    if [ "$RESULT" -eq 0 ]; then
+        echo "STATUS: PROCESS EXITED SUCCESSFULLY"
+    else
+        echo "STATUS: PROCESS FAILED"
+    fi
+
     echo "===== LAUNCH COMPLETE ====="
 
 } > "$LOG" 2>&1
