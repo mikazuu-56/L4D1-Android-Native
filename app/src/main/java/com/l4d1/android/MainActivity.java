@@ -75,7 +75,7 @@ public class MainActivity extends Activity {
         layout.addView(title);
 
         TextView version = createText(
-            "ANDROID LAUNCHER v0.4",
+            "ANDROID LAUNCHER v0.5",
             15,
             Color.LTGRAY
         );
@@ -142,6 +142,32 @@ public class MainActivity extends Activity {
                     .setPositiveButton("OK", null)
                     .show();
             }
+        });
+
+
+        Button runtimeButton = new Button(this);
+        runtimeButton.setText("CHECK RUNTIME");
+
+        layout.addView(runtimeButton);
+
+        runtimeButton.setOnClickListener(v -> {
+
+            RuntimeManager manager =
+                new RuntimeManager(this);
+
+            String result = manager.getStatus();
+
+            runtimeStatus.setText(
+                manager.isReady()
+                    ? "RUNTIME: READY"
+                    : "RUNTIME: NOT READY"
+            );
+
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("Runtime Diagnostics")
+                .setMessage(result)
+                .setPositiveButton("OK", null)
+                .show();
         });
 
         launchButton = new Button(this);

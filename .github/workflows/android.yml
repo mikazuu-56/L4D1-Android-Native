@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - launcher-v0.4
+      - launcher-v0.5
 
 jobs:
   build:
