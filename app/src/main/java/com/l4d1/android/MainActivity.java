@@ -119,6 +119,31 @@ public class MainActivity extends Activity {
 
         layout.addView(runtimeStatus);
 
+
+        Button gpuButton = new Button(this);
+        gpuButton.setText("CHECK VULKAN GPU");
+
+        layout.addView(gpuButton);
+
+        gpuButton.setOnClickListener(v -> {
+            try {
+                String result = NativeEngine.getStatus();
+
+                new android.app.AlertDialog.Builder(this)
+                    .setTitle("Vulkan GPU Information")
+                    .setMessage(result)
+                    .setPositiveButton("OK", null)
+                    .show();
+
+            } catch (Throwable e) {
+                new android.app.AlertDialog.Builder(this)
+                    .setTitle("Vulkan Error")
+                    .setMessage(e.toString())
+                    .setPositiveButton("OK", null)
+                    .show();
+            }
+        });
+
         launchButton = new Button(this);
         launchButton.setText("LAUNCH GAME");
         launchButton.setEnabled(false);

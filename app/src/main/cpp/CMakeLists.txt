@@ -13,3 +13,8 @@ target_compile_features(
     PRIVATE
     cxx_std_17
 )
+
+target_link_libraries(
+    l4d1_native
+    vulkan
+)
