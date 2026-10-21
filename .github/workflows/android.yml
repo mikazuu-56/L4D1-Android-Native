@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - launcher-v0.4
 
 jobs:
   build:
