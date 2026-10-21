@@ -76,7 +76,7 @@ public class MainActivity extends Activity {
         layout.addView(title);
 
         TextView version = createText(
-            "ANDROID LAUNCHER v0.7",
+            "ANDROID LAUNCHER v0.8",
             15,
             Color.LTGRAY
         );
@@ -208,6 +208,7 @@ Button selectButton = new Button(this);
         launchButton.setEnabled(false);
 
         layout.addView(launchButton);
+        launchButton.setOnClickListener(v -> runL4D1());
 
         TextView information = createText(
             "Launcher foundation ready.\n" +
@@ -278,6 +279,66 @@ Button selectButton = new Button(this);
         } catch (Exception e) {
             new android.app.AlertDialog.Builder(this)
                 .setTitle("Termux Bridge Error")
+                .setMessage(e.toString())
+                .setPositiveButton("OK", null)
+                .show();
+        }
+    }
+
+
+    private void runL4D1() {
+        final String permission =
+            "com.termux.permission.RUN_COMMAND";
+
+        if (android.os.Build.VERSION.SDK_INT >= 23 &&
+            checkSelfPermission(permission) !=
+                android.content.pm.PackageManager.PERMISSION_GRANTED) {
+
+            requestPermissions(
+                new String[]{permission}, 2001
+            );
+            return;
+        }
+
+        try {
+            Intent intent = new Intent();
+            intent.setClassName(
+                "com.termux",
+                "com.termux.app.RunCommandService"
+            );
+
+            intent.setAction("com.termux.RUN_COMMAND");
+
+            intent.putExtra(
+                "com.termux.RUN_COMMAND_PATH",
+                "/data/data/com.termux/files/home/" +
+                "L4D1-Android/runtime-bridge/launch-l4d1.sh"
+            );
+
+            intent.putExtra(
+                "com.termux.RUN_COMMAND_WORKDIR",
+                "/data/data/com.termux/files/home"
+            );
+
+            intent.putExtra(
+                "com.termux.RUN_COMMAND_BACKGROUND",
+                true
+            );
+
+            startService(intent);
+
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("L4D1 Launch")
+                .setMessage(
+                    "Launch request submitted to Termux.\n" +
+                    "Check Termux:X11 and the runtime log."
+                )
+                .setPositiveButton("OK", null)
+                .show();
+
+        } catch (Exception e) {
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("L4D1 Launch Error")
                 .setMessage(e.toString())
                 .setPositiveButton("OK", null)
                 .show();
@@ -361,7 +422,7 @@ Button selectButton = new Button(this);
             gameStatus.setTextColor(Color.YELLOW);
         }
 
-        launchButton.setEnabled(false);
+        launchButton.setEnabled(exe && data);
     }
 
     private void restoreGameDirectory() {
