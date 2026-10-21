@@ -76,7 +76,7 @@ public class MainActivity extends Activity {
         layout.addView(title);
 
         TextView version = createText(
-            "ANDROID LAUNCHER v0.6",
+            "ANDROID LAUNCHER v0.7",
             15,
             Color.LTGRAY
         );
@@ -197,6 +197,12 @@ Button selectButton = new Button(this);
                 .show();
         });
 
+
+        Button testDx9Button = new Button(this);
+        testDx9Button.setText("TEST DIRECTX 9");
+        layout.addView(testDx9Button);
+        testDx9Button.setOnClickListener(v -> runDx9Test());
+
         launchButton = new Button(this);
         launchButton.setText("LAUNCH GAME");
         launchButton.setEnabled(false);
@@ -214,6 +220,68 @@ Button selectButton = new Button(this);
         layout.addView(information);
 
         setContentView(scroll);
+    }
+
+
+    private void runDx9Test() {
+        final String permission =
+            "com.termux.permission.RUN_COMMAND";
+
+        if (android.os.Build.VERSION.SDK_INT >= 23 &&
+            checkSelfPermission(permission) !=
+                android.content.pm.PackageManager.PERMISSION_GRANTED) {
+
+            requestPermissions(
+                new String[]{permission}, 2001
+            );
+            return;
+        }
+
+        try {
+            Intent intent = new Intent();
+            intent.setClassName(
+                "com.termux",
+                "com.termux.app.RunCommandService"
+            );
+
+            intent.setAction(
+                "com.termux.RUN_COMMAND"
+            );
+
+            intent.putExtra(
+                "com.termux.RUN_COMMAND_PATH",
+                "/data/data/com.termux/files/home/" +
+                "L4D1-Android/runtime-bridge/test-dx9.sh"
+            );
+
+            intent.putExtra(
+                "com.termux.RUN_COMMAND_WORKDIR",
+                "/data/data/com.termux/files/home"
+            );
+
+            intent.putExtra(
+                "com.termux.RUN_COMMAND_BACKGROUND",
+                true
+            );
+
+            startService(intent);
+
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("DX9 Test")
+                .setMessage(
+                    "Launch request submitted to Termux.\\n" +
+                    "Check Termux:X11 for the DX9 window."
+                )
+                .setPositiveButton("OK", null)
+                .show();
+
+        } catch (Exception e) {
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("Termux Bridge Error")
+                .setMessage(e.toString())
+                .setPositiveButton("OK", null)
+                .show();
+        }
     }
 
     private boolean hasChild(

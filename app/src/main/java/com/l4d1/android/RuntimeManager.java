@@ -2,6 +2,7 @@ package com.l4d1.android;
 
 import android.content.Context;
 import android.os.Build;
+
 import java.io.File;
 
 public class RuntimeManager {
@@ -12,49 +13,65 @@ public class RuntimeManager {
         this.context = context;
     }
 
+    private File runtimeDir() {
+        return new File(context.getFilesDir(), "runtime");
+    }
+
+    private File runtimeFile(String path) {
+        return new File(runtimeDir(), path);
+    }
+
+    private boolean exists(String path) {
+        return runtimeFile(path).isFile();
+    }
+
     public String getStatus() {
 
-        File runtime = new File(
-            context.getFilesDir(), "runtime"
-        );
+        StringBuilder result = new StringBuilder();
 
-        File wine = new File(runtime, "bin/wine");
-        File box86 = new File(runtime, "bin/box86");
-        File box64 = new File(runtime, "bin/box64");
+        result.append("L4D1 ANDROID RUNTIME v0.7\n\n");
 
-        StringBuilder s = new StringBuilder();
+        result.append("Android: ")
+              .append(Build.VERSION.RELEASE)
+              .append("\n");
 
-        s.append("L4D1 RUNTIME DIAGNOSTICS\n\n");
+        result.append("CPU ABI: ")
+              .append(Build.SUPPORTED_ABIS[0])
+              .append("\n\n");
 
-        s.append("Android: ")
-         .append(Build.VERSION.RELEASE)
-         .append("\n");
+        result.append("Runtime files:\n");
 
-        s.append("CPU ABI: ")
-         .append(Build.SUPPORTED_ABIS[0])
-         .append("\n\n");
+        result.append("Hangover Wine: ")
+              .append(exists("bin/wine") ? "FOUND" : "MISSING")
+              .append("\n");
 
-        s.append("Wine: ")
-         .append(wine.isFile() ? "FOUND" : "MISSING")
-         .append("\n");
+        result.append("WowBox64: ")
+              .append(exists("lib/wine/aarch64-windows/wowbox64.dll")
+                      ? "FOUND" : "MISSING")
+              .append("\n");
 
-        s.append("Box86: ")
-         .append(box86.isFile() ? "FOUND" : "MISSING")
-         .append("\n");
+        result.append("WineD3D x86: ")
+              .append(exists("lib/wine/i386-windows/wined3d.dll")
+                      ? "FOUND" : "MISSING")
+              .append("\n");
 
-        s.append("Box64: ")
-         .append(box64.isFile() ? "FOUND" : "MISSING")
-         .append("\n\n");
+        result.append("DirectX 9 x86: ")
+              .append(exists("lib/wine/i386-windows/d3d9.dll")
+                      ? "FOUND" : "MISSING")
+              .append("\n\n");
 
-        s.append("Runtime execution: NOT VERIFIED\n");
+        result.append("Runtime execution: NOT VERIFIED\n");
 
-        s.append("\nRuntime directory:\n")
-         .append(runtime.getAbsolutePath());
+        result.append("Android integration: NOT COMPLETE\n");
 
-        return s.toString();
+        result.append("\nRuntime directory:\n")
+              .append(runtimeDir().getAbsolutePath());
+
+        return result.toString();
     }
 
     public boolean isReady() {
+        // File existence is not proof of executable compatibility.
         return false;
     }
 }
