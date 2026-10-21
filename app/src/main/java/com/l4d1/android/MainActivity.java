@@ -201,7 +201,10 @@ Button selectButton = new Button(this);
             RuntimeManager manager =
                 new RuntimeManager(this);
 
-            String result = manager.getStatus();
+            String result =
+                manager.getStatus() +
+                "\n\n" +
+                RuntimeProbe.inspect(this);
 
             runtimeStatus.setText(
                 manager.isReady()

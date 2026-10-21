@@ -1,7 +1,6 @@
 package com.l4d1.android;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.os.Build;
 import java.io.File;
 
@@ -17,8 +16,11 @@ public class RuntimeManager {
         return new File(context.getFilesDir(), "runtime");
     }
 
-    private boolean hasStandaloneRuntime() {
-        File wine = new File(runtimeDir(), "bin/wine");
+    private boolean hasWineFiles() {
+        File wine = new File(
+            runtimeDir(), "bin/wine"
+        );
+
         File wowbox = new File(
             runtimeDir(),
             "lib/wine/aarch64-windows/wowbox64.dll"
@@ -27,25 +29,16 @@ public class RuntimeManager {
         return wine.isFile() && wowbox.isFile();
     }
 
-    private boolean hasTermux() {
-        try {
-            context.getPackageManager().getPackageInfo(
-                "com.termux", 0
-            );
-            return true;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
-        }
-    }
-
     public boolean isReady() {
-        return hasStandaloneRuntime();
+        // File presence does not prove executability.
+        // Standalone execution has not been validated.
+        return false;
     }
 
     public String getStatus() {
         StringBuilder s = new StringBuilder();
 
-        s.append("L4D1 ANDROID RUNTIME v0.9\n\n");
+        s.append("LEFT 4 DEAD 2 RUNTIME\n\n");
 
         s.append("Android: ")
          .append(Build.VERSION.RELEASE)
@@ -55,17 +48,19 @@ public class RuntimeManager {
          .append(Build.SUPPORTED_ABIS[0])
          .append("\n\n");
 
-        s.append("Termux installed: ")
-         .append(hasTermux() ? "YES" : "NO")
+        s.append("Wine files: ")
+         .append(
+             hasWineFiles() ? "FOUND" : "MISSING"
+         )
          .append("\n");
 
-        s.append("Standalone runtime files: ")
-         .append(hasStandaloneRuntime() ? "FOUND" : "MISSING")
-         .append("\n\n");
+        s.append("Wine execution: NOT VERIFIED\n");
 
-        s.append("Runtime execution: NOT VERIFIED\n");
+        s.append("WowBox64 execution: NOT VERIFIED\n");
 
-        s.append("Standalone integration: INCOMPLETE\n\n");
+        s.append("Graphics integration: INCOMPLETE\n");
+
+        s.append("Standalone runtime: NOT READY\n\n");
 
         s.append("Runtime directory:\n")
          .append(runtimeDir().getAbsolutePath());
