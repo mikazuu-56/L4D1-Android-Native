@@ -36,6 +36,25 @@ public class MainActivity extends Activity {
 
         buildInterface();
         restoreGameDirectory();
+
+        try {
+            RuntimeStorage storage = new RuntimeStorage(this);
+
+            storage.getRuntimeDirectory();
+            storage.getConfigDirectory();
+            storage.getLogDirectory();
+
+            android.util.Log.i(
+                "L4D1_RUNTIME",
+                storage.getStatus()
+            );
+        } catch (Exception e) {
+            android.util.Log.e(
+                "L4D1_RUNTIME",
+                "Runtime storage initialization failed",
+                e
+            );
+        }
     }
 
     private TextView createText(
@@ -208,7 +227,7 @@ Button selectButton = new Button(this);
         launchButton.setEnabled(false);
 
         layout.addView(launchButton);
-        launchButton.setOnClickListener(v -> runL4D1());
+        launchButton.setOnClickListener(v -> runL4D2());
 
         TextView information = createText(
             "Launcher foundation ready.\n" +
@@ -286,63 +305,21 @@ Button selectButton = new Button(this);
     }
 
 
-    private void runL4D1() {
-        final String permission =
-            "com.termux.permission.RUN_COMMAND";
+    private void runL4D2() {
+        RuntimeManager manager = new RuntimeManager(this);
 
-        if (android.os.Build.VERSION.SDK_INT >= 23 &&
-            checkSelfPermission(permission) !=
-                android.content.pm.PackageManager.PERMISSION_GRANTED) {
+        String message =
+            "L4D2 folder detection is available.\\n\\n" +
+            "Standalone Wine runtime is not yet integrated.\\n" +
+            "Game execution is not available in this build.\\n\\n" +
+            "Runtime status:\\n" +
+            manager.getStatus();
 
-            requestPermissions(
-                new String[]{permission}, 2001
-            );
-            return;
-        }
-
-        try {
-            Intent intent = new Intent();
-            intent.setClassName(
-                "com.termux",
-                "com.termux.app.RunCommandService"
-            );
-
-            intent.setAction("com.termux.RUN_COMMAND");
-
-            intent.putExtra(
-                "com.termux.RUN_COMMAND_PATH",
-                "/data/data/com.termux/files/home/" +
-                "L4D1-Android/runtime-bridge/launch-l4d1.sh"
-            );
-
-            intent.putExtra(
-                "com.termux.RUN_COMMAND_WORKDIR",
-                "/data/data/com.termux/files/home"
-            );
-
-            intent.putExtra(
-                "com.termux.RUN_COMMAND_BACKGROUND",
-                true
-            );
-
-            startService(intent);
-
-            new android.app.AlertDialog.Builder(this)
-                .setTitle("L4D1 Launch")
-                .setMessage(
-                    "Launch request submitted to Termux.\n" +
-                    "Check Termux:X11 and the runtime log."
-                )
-                .setPositiveButton("OK", null)
-                .show();
-
-        } catch (Exception e) {
-            new android.app.AlertDialog.Builder(this)
-                .setTitle("L4D1 Launch Error")
-                .setMessage(e.toString())
-                .setPositiveButton("OK", null)
-                .show();
-        }
+        new android.app.AlertDialog.Builder(this)
+            .setTitle("Left 4 Dead 2 - Runtime Status")
+            .setMessage(message)
+            .setPositiveButton("OK", null)
+            .show();
     }
 
     private boolean hasChild(
@@ -397,32 +374,32 @@ Button selectButton = new Button(this);
     }
 
     private void validateGame(Uri uri) {
+        try {
+            L4D2Detector.Result result =
+                L4D2Detector.check(this, uri);
 
-        boolean exe = hasChild(
-            uri, "left4dead.exe", null
-        );
+            gameStatus.setText(result.getStatus());
 
-        boolean data = hasChild(
-            uri,
-            "left4dead",
-            DocumentsContract.Document.MIME_TYPE_DIR
-        );
-
-        if (exe && data) {
-            gameStatus.setText(
-                "GAME: BASIC FILE CHECK PASSED"
+            gameStatus.setTextColor(
+                result.isValid() ? Color.GREEN : Color.YELLOW
             );
-            gameStatus.setTextColor(Color.GREEN);
-        } else {
+
+            launchButton.setEnabled(result.isValid());
+
+        } catch (Exception e) {
             gameStatus.setText(
-                "GAME: INCOMPLETE\n" +
-                "left4dead.exe: " + exe + "\n" +
-                "left4dead folder: " + data
+                "L4D2: FOLDER VALIDATION FAILED"
             );
-            gameStatus.setTextColor(Color.YELLOW);
+
+            gameStatus.setTextColor(Color.RED);
+            launchButton.setEnabled(false);
+
+            android.util.Log.e(
+                "L4D2_LAUNCHER",
+                "Cannot validate L4D2 folder",
+                e
+            );
         }
-
-        launchButton.setEnabled(exe && data);
     }
 
     private void restoreGameDirectory() {
