@@ -29,6 +29,10 @@ jobs:
           echo "===== INSTALLED PLATFORMS ====="
           ls -lah "$ANDROID_SDK_ROOT/platforms" || true
 
+      - name: Install Android NDK and CMake
+        run: |
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"             --install "ndk;27.2.12479018" "cmake;3.22.1" ||           test -d "$ANDROID_SDK_ROOT/ndk/27.2.12479018"
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 

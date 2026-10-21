@@ -20,6 +20,28 @@ public class MainActivity extends Activity {
             5894 | 1024 | 512
         );
 
+        try {
+            String status = NativeEngine.getStatus();
+
+            android.util.Log.i(
+                "L4D1_NATIVE",
+                status
+            );
+
+            android.widget.Toast.makeText(
+                this,
+                status,
+                android.widget.Toast.LENGTH_LONG
+            ).show();
+
+        } catch (Throwable e) {
+            android.util.Log.e(
+                "L4D1_NATIVE",
+                "Native engine failed",
+                e
+            );
+        }
+
         renderer = new WorldRenderer();
 
         glView = new GLSurfaceView(this);
