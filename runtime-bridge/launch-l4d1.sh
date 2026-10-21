@@ -9,7 +9,7 @@ export WINEPREFIX="$HOME/.wine-l4d1-probe"
 export GALLIUM_DRIVER=zink
 export MESA_LOADER_DRIVER_OVERRIDE=zink
 
-GAME="$HOME/storage/downloads/Left 4 Dead"
+GAME="$HOME/l4d1-native-test"
 LOG="$HOME/l4d1-launch.log"
 
 {
@@ -27,8 +27,9 @@ LOG="$HOME/l4d1-launch.log"
 
     cd "$GAME" || exit 1
 
-    WINEDEBUG=-all timeout 90s \
-        hangover-wine "$GAME/left4dead.exe"
+    WINEDEBUG=-all \
+        hangover-wine "$GAME/left4dead.exe" \
+        -windowed -w 800 -h 600 -dxlevel 90 -novid
 
     RESULT=$?
 
