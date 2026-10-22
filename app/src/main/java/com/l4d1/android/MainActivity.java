@@ -104,7 +104,7 @@ public class MainActivity extends Activity {
         layout.addView(version);
 
 
-        
+
         Button hudButton = new Button(this);
         hudButton.setText("CUSTOMIZE TOUCH CONTROLS");
         layout.addView(hudButton);
@@ -112,6 +112,21 @@ public class MainActivity extends Activity {
         hudButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, HudEditor.class);
             startActivity(intent);
+        });
+
+
+        Button standaloneButton = new Button(this);
+        standaloneButton.setText("CHECK STANDALONE RUNTIME");
+        layout.addView(standaloneButton);
+
+        standaloneButton.setOnClickListener(v -> {
+            RuntimeLoader loader = new RuntimeLoader(this);
+
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("L4D2 Standalone Diagnostics")
+                .setMessage(loader.inspect())
+                .setPositiveButton("OK", null)
+                .show();
         });
 
         Button installerButton = new Button(this);
