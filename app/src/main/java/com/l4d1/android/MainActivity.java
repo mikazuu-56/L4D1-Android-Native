@@ -220,6 +220,30 @@ Button selectButton = new Button(this);
         });
 
 
+        Button wineButton = new Button(this);
+        wineButton.setText("TEST WINE VERSION");
+        layout.addView(wineButton);
+
+        wineButton.setOnClickListener(v -> {
+            wineButton.setEnabled(false);
+            wineButton.setText("TESTING WINE...");
+
+            new Thread(() -> {
+                String result = WineBootstrap.testVersion(this);
+
+                runOnUiThread(() -> {
+                    wineButton.setEnabled(true);
+                    wineButton.setText("TEST WINE VERSION");
+
+                    new android.app.AlertDialog.Builder(this)
+                        .setTitle("Wine Bootstrap Test")
+                        .setMessage(result)
+                        .setPositiveButton("OK", null)
+                        .show();
+                });
+            }).start();
+        });
+
         Button arm64Button = new Button(this);
         arm64Button.setText("TEST ARM64 EXECUTION");
         layout.addView(arm64Button);
