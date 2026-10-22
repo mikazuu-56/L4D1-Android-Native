@@ -4,7 +4,7 @@
 </queries>
 
 <uses-permission android:name="com.termux.permission.RUN_COMMAND"/>
-    <application android:icon="@drawable/app_icon"
+    <application android:extractNativeLibs="true" android:icon="@drawable/app_icon"
         android:theme="@android:style/Theme.Material.NoActionBar"
         android:label="L4D1 Android">
         <activity
