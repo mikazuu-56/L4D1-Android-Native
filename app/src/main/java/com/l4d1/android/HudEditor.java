@@ -23,15 +23,32 @@ public class HudEditor extends Activity {
     private String selectedName;
 
     private final String[] names = {
-        "JOYSTICK", "FIRE", "AIM", "RELOAD",
-        "JUMP", "CROUCH", "USE", "SWAP"
+        "JOYSTICK", "FIRE", "AIM", "SHOVE",
+        "RELOAD", "JUMP", "CROUCH", "USE",
+        "FLASHLIGHT", "SWAP",
+        "SLOT 1", "SLOT 2", "SLOT 3",
+        "SLOT 4", "SLOT 5",
+        "SCORE", "PAUSE"
     };
 
     private final float[][] defaults = {
-        {0.15f, 0.73f}, {0.88f, 0.48f},
-        {0.76f, 0.38f}, {0.87f, 0.70f},
-        {0.75f, 0.77f}, {0.88f, 0.85f},
-        {0.63f, 0.84f}, {0.63f, 0.65f}
+        {0.15f, 0.75f},
+        {0.90f, 0.53f},
+        {0.78f, 0.40f},
+        {0.91f, 0.30f},
+        {0.79f, 0.65f},
+        {0.90f, 0.79f},
+        {0.78f, 0.87f},
+        {0.65f, 0.78f},
+        {0.58f, 0.88f},
+        {0.67f, 0.55f},
+        {0.25f, 0.12f},
+        {0.35f, 0.12f},
+        {0.45f, 0.12f},
+        {0.55f, 0.12f},
+        {0.65f, 0.12f},
+        {0.10f, 0.12f},
+        {0.90f, 0.12f}
     };
 
     @Override
