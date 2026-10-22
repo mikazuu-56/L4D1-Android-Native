@@ -34,4 +34,50 @@ public class RuntimeProbe {
 
         return result.toString();
     }
+
+    public static String execute(Context context) {
+        File binary = new File(
+            context.getApplicationInfo().nativeLibraryDir,
+            "libwineprobe.so"
+        );
+
+        if (!binary.isFile()) {
+            return "PROBE NOT FOUND: " + binary;
+        }
+
+        try {
+            ProcessBuilder builder = new ProcessBuilder(
+                binary.getAbsolutePath()
+            );
+
+            builder.redirectErrorStream(true);
+
+            Process process = builder.start();
+
+            java.io.BufferedReader reader =
+                new java.io.BufferedReader(
+                    new java.io.InputStreamReader(
+                        process.getInputStream()
+                    )
+                );
+
+            StringBuilder output = new StringBuilder();
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+
+            int exitCode = process.waitFor();
+
+            output.append("Exit code: ")
+                  .append(exitCode);
+
+            return output.toString();
+
+        } catch (Exception e) {
+            return "PROBE EXECUTION FAILED:\n" + e;
+        }
+    }
+
 }

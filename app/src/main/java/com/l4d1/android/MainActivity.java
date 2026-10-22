@@ -220,6 +220,30 @@ Button selectButton = new Button(this);
         });
 
 
+        Button arm64Button = new Button(this);
+        arm64Button.setText("TEST ARM64 EXECUTION");
+        layout.addView(arm64Button);
+
+        arm64Button.setOnClickListener(v -> {
+            arm64Button.setEnabled(false);
+            arm64Button.setText("TESTING ARM64...");
+
+            new Thread(() -> {
+                String result = RuntimeProbe.execute(this);
+
+                runOnUiThread(() -> {
+                    arm64Button.setEnabled(true);
+                    arm64Button.setText("TEST ARM64 EXECUTION");
+
+                    new android.app.AlertDialog.Builder(this)
+                        .setTitle("ARM64 Execution Test")
+                        .setMessage(result)
+                        .setPositiveButton("OK", null)
+                        .show();
+                });
+            }).start();
+        });
+
         Button testDx9Button = new Button(this);
         testDx9Button.setText("TEST DIRECTX 9");
         layout.addView(testDx9Button);

@@ -3,6 +3,12 @@ plugins {
 }
 
 android {
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+
     namespace 'com.l4d1.android'
     compileSdk 35
     ndkVersion '27.2.12479018'
