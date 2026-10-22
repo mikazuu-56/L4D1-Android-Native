@@ -356,21 +356,67 @@ Button selectButton = new Button(this);
     }
 
 
+
     private void runL4D2() {
-        RuntimeManager manager = new RuntimeManager(this);
+        final String permission =
+            "com.termux.permission.RUN_COMMAND";
 
-        String message =
-            "L4D2 folder detection is available.\\n\\n" +
-            "Standalone Wine runtime is not yet integrated.\\n" +
-            "Game execution is not available in this build.\\n\\n" +
-            "Runtime status:\\n" +
-            manager.getStatus();
+        if (android.os.Build.VERSION.SDK_INT >= 23 &&
+            checkSelfPermission(permission) !=
+                android.content.pm.PackageManager.PERMISSION_GRANTED) {
 
-        new android.app.AlertDialog.Builder(this)
-            .setTitle("Left 4 Dead 2 - Runtime Status")
-            .setMessage(message)
-            .setPositiveButton("OK", null)
-            .show();
+            requestPermissions(
+                new String[]{permission}, 2002
+            );
+            return;
+        }
+
+        try {
+            Intent intent = new Intent();
+
+            intent.setClassName(
+                "com.termux",
+                "com.termux.app.RunCommandService"
+            );
+
+            intent.setAction(
+                "com.termux.RUN_COMMAND"
+            );
+
+            intent.putExtra(
+                "com.termux.RUN_COMMAND_PATH",
+                "/data/data/com.termux/files/home/" +
+                "L4D1-Android/runtime-bridge/launch-l4d2.sh"
+            );
+
+            intent.putExtra(
+                "com.termux.RUN_COMMAND_WORKDIR",
+                "/data/data/com.termux/files/home"
+            );
+
+            intent.putExtra(
+                "com.termux.RUN_COMMAND_BACKGROUND",
+                true
+            );
+
+            startService(intent);
+
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("Left 4 Dead 2")
+                .setMessage(
+                    "L4D2 launch request sent to Termux.\\n\\n" +
+                    "Open Termux:X11 to view the game."
+                )
+                .setPositiveButton("OK", null)
+                .show();
+
+        } catch (Exception e) {
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("L4D2 Launch Error")
+                .setMessage(e.toString())
+                .setPositiveButton("OK", null)
+                .show();
+        }
     }
 
     private boolean hasChild(
