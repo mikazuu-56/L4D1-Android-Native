@@ -104,6 +104,16 @@ public class MainActivity extends Activity {
         layout.addView(version);
 
 
+        
+        Button hudButton = new Button(this);
+        hudButton.setText("CUSTOMIZE TOUCH CONTROLS");
+        layout.addView(hudButton);
+
+        hudButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, HudEditor.class);
+            startActivity(intent);
+        });
+
         Button installerButton = new Button(this);
         installerButton.setText("SELECT WINDOWS INSTALLER");
 
